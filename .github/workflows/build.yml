@@ -2,13 +2,21 @@ name: build
 
 on:
   push:
-    branches: [ main, release ]
-    paths-ignore:
-      - '**/README.md'
+    branches: master
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:latest
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_EMPTY_PASSWORD: true
+          MYSQL-DB: sprintboot
+        ports:
+          - 3306:3306
+        options:
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 17
@@ -18,9 +26,9 @@ jobs:
           distribution: 'temurin'
           cache: maven
       - name: Build with Maven
-        run: mvn -B package
-#      - name: Publish to Docker
-#        run: |
-#            mvn -B spring-boot:build-image -Dspring-boot.build-image.publish=true \
-#                -Ddocker.user=${{ secrets.DOCKER_USER }} -Ddocker.token=${{ secrets.DOCKER_TOKEN }} \
-#                -DskipTests
+        run: mvn -B package --file pom.xml
+      - name: Publish to Docker
+        run: |
+            mvn -B spring-boot:build-image -Dspring-boot.build-image.publish=true \
+                -Ddocker.user=${{ secrets.DOCKER_USER }} -Ddocker.token=${{ secrets.DOCKER_TOKEN }} \
+                -DskipTests
